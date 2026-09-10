@@ -13,6 +13,11 @@
 | **标准包（在线）** | `goteams-commercial-cn-<version>.run` | 中（含 Docker 运行时，不含镜像） | 安装/升级时须能访问镜像仓库，在线 `docker compose pull` | 服务器可上外网 |
 | **离线包** | `goteams-commercial-cn-<version>-offline.run` | 大（含 Docker 运行时 + 全部镜像） | **全程无需外网**，安装/升级时直接 `docker load` 包内 `payload/images/images.tar.gz` | 内网、隔离、无外网出口环境 |
 
+最新版本 **v0.0.30** 下载地址：
+
+- 标准包（在线）：https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30.run
+- 离线包：https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30-offline.run
+
 > 两类包的**安装、升级、卸载命令完全一致**——安装器检测到 `payload/images/images.tar.gz` 存在即走离线 `docker load` 并跳过镜像拉取。
 >
 > 两类包**都内置 Docker Engine 与 Docker Compose 的离线安装包**（`payload/runtime/`，约 150 MB），因此包体积比不带运行时的旧包明显增大；未安装 Docker 的裸机也能开箱部署（见 4.6 节）。运行时只是包内文件，**不会**因为解压或升级而写入系统。
