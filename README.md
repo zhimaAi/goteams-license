@@ -1,108 +1,172 @@
-# GoTeams 商业版安装与运维指南（goteamsctl）
+<p align="center"><a href="http://goteams.ai/"><img src="./assets/imgs/head_image_en.png" alt="head_image"></a></p>
 
-本文面向交付/运维人员，说明商业版两种安装包（标准包、离线包）的解压、安装、升级、回滚、服务管理、日志查看与卸载的完整命令。所有操作均通过包内自带的控制工具 `goteamsctl` 完成，目标环境为 **Linux amd64**。
+<p align="center">
+  <a href="./README.md">English</a> |
+  <a href="./README_zh.md">简体中文</a> |
+  <a href="./UpdateLog.md">UpdateLog</a>
+</p>
+
+## 🎯 Product Positioning
+
+GoTeams is a next-generation AI R&D collaboration platform that makes AI agents your team members. With deeply integrated AI agent capabilities, built-in Agent employees, and support for Agent self-evolution, GoTeams enables every team to seamlessly manage the entire lifecycle from requirements to delivery.
+
+## ✨ Core Features
+
+### 🤖 AI Agent Collaboration
+
+- **Agent Employees**: Agents appear in the assignment dropdown menu — assign tasks to an Agent just like you would to a colleague.
+
+- **Autonomous Execution**: Agents proactively pick up work and drive it forward independently, with a complete execution lifecycle: queued, claimed, started, completed, or failed.
+
+- **Proactive Reporting & Notifications**: Agents proactively notify when blocked, with real-time push updates for progress tracking.
+
+- **Unified Activity Timeline**: All actions by humans and Agents are visible on a unified timeline for seamless collaboration.
+
+### 📋 Work Item Management
+
+- **Flexible Work Item Types**: Support for requirements and defects with customizable fields and workflows.
+
+- **Kanban & List Views**: Drag-and-drop Kanban management and list views with flexible switching.
+
+- **Iteration Management**: Create and manage iterations, associate work items, and track iteration progress.
+
+- **Batch Operations**: Batch update status, priority, assignee, and iteration, plus batch export and delete.
+
+### ⚙️ Automation
+
+- **Automation Rule Engine**: Let repetitive collaboration workflows execute automatically with the automation rule engine, freeing up team productivity.
+
+- **Condition-Triggered Actions**: Configure conditional branches and actions that automatically trigger when conditions are met.
+
+### 🏢 Team & Permission Management
+
+- **Multi-Level Permissions**: Support for workspace admins, members, and custom roles with fine-grained functional and data permission controls.
+
+- **Data Visibility Scopes**: Three visibility configurations — all members, partial members, or self only.
+
+- **Role-Based Access Control**: Preset and custom roles with per-module functional permissions and independent data access controls.
+
+### 🛠️ Skill Library
+
+- **Reusable Skill Definitions**: Save solutions as standardized skills, packaging code, configuration, and context together.
+
+- **Team-Wide Sharing**: Write once, usable by every Agent on the team. The skill library grows continuously over time.
+
+- **Compound Growth**: Skills multiply and strengthen with use, forming lasting team knowledge assets.
+
+## 🛸 UI
+
+- 🌍 **Free Trial**: [goteams.ai](http://goteams.ai/)
+- 🧪 **Test Project**: This free trial environment is a test project for evaluation purposes.
+- 🖼️ **Screenshots**:
+
+<p align="center">   <img src="./assets/imgs/ui_1_en.png" alt="1" width="49%" />   <img src="./assets/imgs/ui_2_en.png" alt="2" width="49%" /> </p>
+<p align="center">   <img src="./assets/imgs/ui_3_en.png" alt="3" width="49%" />   <img src="./assets/imgs/ui_4_en.png" alt="4" width="49%" /> </p>
+
+## 🏢 Commercial Edition Installation & Operations Guide (goteamsctl)
+
+This guide is intended for delivery and operations personnel. It covers the complete set of commands for extracting, installing, upgrading, rolling back, managing services, viewing logs, and uninstalling the two Commercial Edition packages (standard and offline). All operations are performed with the bundled control tool `goteamsctl`. The target environment is **Linux amd64**.
 
 ---
 
-## 1. 两种安装包
+### 1. Two Types of Installation Packages
 
-商业版以自解压 `.run` 文件交付，按**是否需要联网获取 Docker 镜像**分为两类**独立的安装包**，分别打包、分别分发：
+The Commercial Edition is delivered as self-extracting `.run` files. Depending on whether Docker images must be fetched over the network, there are two **separate packages**, built and distributed independently:
 
-| 安装包 | 文件名 | 体积 | 网络要求 | 适用场景 |
-|--------|--------|------|----------|----------|
-| **标准包（在线）** | `goteams-commercial-cn-<version>.run` | 中（含 Docker 运行时，不含镜像） | 安装/升级时须能访问镜像仓库，在线 `docker compose pull` | 服务器可上外网 |
-| **离线包** | `goteams-commercial-cn-<version>-offline.run` | 大（含 Docker 运行时 + 全部镜像） | **全程无需外网**，安装/升级时直接 `docker load` 包内 `payload/images/images.tar.gz` | 内网、隔离、无外网出口环境 |
+| Package | File Name | Size | Network Requirement | Use Case |
+|---------|-----------|------|---------------------|----------|
+| **Standard (online)** | `goteams-commercial-cn-<version>.run` | Medium (Docker runtime included, images excluded) | Must reach the image registry during install/upgrade for online `docker compose pull` | Servers with internet access |
+| **Offline** | `goteams-commercial-cn-<version>-offline.run` | Large (Docker runtime + all images included) | **No external network needed at all**; install/upgrade runs `docker load` directly on the bundled `payload/images/images.tar.gz` | Intranet, air-gapped, or no-egress environments |
 
-最新版本 **v0.0.30** 下载地址：
+Latest version **v0.0.30** download links:
 
-- 标准包（在线）：https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30.run
-- 离线包：https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30-offline.run
+- Standard (online): https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30.run
+- Offline: https://github.com/zhimaAi/goteams-license/releases/download/v0.0.30/goteams-commercial-cn-v0.0.30-offline.run
 
-> 两类包的**安装、升级、卸载命令完全一致**——安装器检测到 `payload/images/images.tar.gz` 存在即走离线 `docker load` 并跳过镜像拉取。
+> The install, upgrade, and uninstall commands are **identical for both packages** — when the installer detects `payload/images/images.tar.gz`, it performs an offline `docker load` and skips image pulling.
 >
-> 两类包**都内置 Docker Engine 与 Docker Compose 的离线安装包**（`payload/runtime/`，约 150 MB），因此包体积比不带运行时的旧包明显增大；未安装 Docker 的裸机也能开箱部署（见 4.6 节）。运行时只是包内文件，**不会**因为解压或升级而写入系统。
+> Both packages **bundle offline installers for Docker Engine and Docker Compose** (`payload/runtime/`, ~150 MB), which noticeably increases the package size compared with older packages without the runtime. Bare-metal hosts without Docker can therefore be deployed out of the box (see Section 2). The runtime files live only inside the package and are **never** written to the system during extraction or upgrade.
 
-### 1.1 解压后的包目录结构
+#### 1.1 Package Directory Structure After Extraction
 
 ```
 goteams-commercial-cn-<version>[-offline]/
-├── goteamsctl                  # 控制工具（安装/升级/服务/日志/卸载）
-├── manifest.json               # 版本与文件清单
+├── goteamsctl                  # Control tool (install/upgrade/service/logs/uninstall)
+├── manifest.json               # Version and file manifest
 └── payload/
-    ├── bin/goteams             # 后端二进制
-    ├── docker/                 # docker-compose.yml、nginx、启动脚本
-    ├── web/dist.tar.gz         # 前端编译产物
-    ├── runtime/                # 内置 Docker 离线安装包（两类包都有）
-    │   ├── docker-<ver>.tgz    #   Docker Engine 静态包（8 个二进制）
-    │   ├── docker-compose      #   Compose V2 CLI 插件
-    │   └── systemd/            #   containerd.service、docker.service、docker.socket
-    └── images/images.tar.gz    # 仅离线包：全部 Docker 镜像
+    ├── bin/goteams             # Backend binary
+    ├── docker/                 # docker-compose.yml, nginx, startup scripts
+    ├── web/dist.tar.gz         # Frontend build artifacts
+    ├── runtime/                # Bundled offline Docker installers (both packages)
+    │   ├── docker-<ver>.tgz    #   Docker Engine static package (8 binaries)
+    │   ├── docker-compose      #   Compose V2 CLI plugin
+    │   └── systemd/            #   containerd.service, docker.service, docker.socket
+    └── images/images.tar.gz    # Offline package only: all Docker images
 ```
 
-## 2. 环境要求
+### 2. Environment Requirements
 
-| 项目 | 要求 |
-|------|------|
-| 系统 | Linux amd64（真实 Linux 服务器或虚拟机；**不支持 WSL** 等不暴露 `/sys/class/dmi` 的环境，设备码依赖硬件标识） |
-| Docker | 已安装并可用（`docker compose version` 正常）时，安装直接跳过内置运行时；未安装的裸机由 `install` 自动安装包内 `payload/runtime/`，此时额外要求 **root**、**systemd（PID 1）**、**iptables 或 nft**（静态包不含防火墙用户态工具）。详见 4.6 节 |
-| 磁盘 | 安装分区剩余 ≥ 10 GB |
-| 内存 | 总内存 ≥ 2 GB |
-| 网络 | **标准包**：安装/升级时须能访问镜像仓库拉取镜像；**离线包**：安装全程无需外网。在线授权激活/续期需出站访问运营方授权服务，使用离线授权 key 则完全不需要外网 |
-| 端口 | Web 站点默认监听 `8080`，安装时可修改 |
+| Item | Requirement |
+|------|-------------|
+| OS | Linux amd64 (a real Linux server or VM; **WSL and other environments that do not expose `/sys/class/dmi` are not supported**, as the device code depends on hardware identifiers) |
+| Docker | If Docker is installed and working (`docker compose version` succeeds), installation skips the bundled runtime. On bare-metal hosts without Docker, `install` automatically installs `payload/runtime/` from the package, which additionally requires **root**, **systemd (PID 1)**, and **iptables or nft** (the static package does not ship firewall user-space tools) |
+| Disk | ≥ 10 GB free on the installation partition |
+| Memory | ≥ 2 GB total |
+| Network | **Standard package**: must reach the image registry to pull images during install/upgrade. **Offline package**: no external network needed at all. Online license activation/renewal requires outbound access to the vendor's licensing service; with an offline license key, no external network is needed whatsoever |
+| Port | The website listens on `8080` by default; can be changed during installation |
 
-## 3. 安装与使用
+### 3. Installation and Usage
 
-按客户环境选择**标准包**或**离线包**其中一类，把 `.run` 上传到服务器后按顺序执行：
+Choose **either** the standard package or the offline package according to the customer environment, upload the `.run` file to the server, and execute the following in order:
 
 ```bash
 sudo chmod +x ./goteams-commercial-cn-v0.0.20-offline.run
 ./goteams-commercial-cn-v0.0.20-offline.run
 cd goteams-commercial-cn-v0.0.20-offline
-sudo ./goteamsctl install   # 安装
+sudo ./goteamsctl install   # Install
 ```
 
-安装器依次执行：
+The installer performs the following steps:
 
-1. **预检查**：平台（linux/amd64）、安装包完整性（SHA256SUMS + manifest 白名单）、磁盘空间（≥10 GB）、内存（≥2 GB）、硬件标识（`/sys/class/dmi`）。
-2. **Docker 运行时准备**：主机已有可用的 Docker Engine + Compose V2 时打印 `bundled runtime install skipped` 并跳过；否则安装内置运行时（见 4.6 节）。
-3. **交互提问**（直接回车接受默认值）：
-    - `timezone`：时区，默认 `Asia/Shanghai`
-    - `web port (site)`：站点端口，默认 `8080`（自动检测占用并要求重试）
-    - `proceed with installation`：输入 `y` 确认开始
-4. **完成输出**：站点地址、默认管理员 `admin`（使用对应环境包内置初始密码，首次登录强制修改）、授权状态。
+1. **Pre-checks**: platform (linux/amd64), package integrity (SHA256SUMS + manifest whitelist), disk space (≥10 GB), memory (≥2 GB), hardware identifiers (`/sys/class/dmi`).
+2. **Docker runtime preparation**: if a working Docker Engine + Compose V2 is already present on the host, it prints `bundled runtime install skipped` and skips; otherwise it installs the bundled runtime.
+3. **Interactive prompts** (press Enter to accept the default):
+    - `timezone`: time zone, default `Asia/Shanghai`
+    - `web port (site)`: site port, default `8080` (port occupancy is detected automatically and re-prompted)
+    - `proceed with installation`: enter `y` to confirm and start
+4. **Completion output**: site URL, default administrator `admin` (initial password built into the corresponding environment package, with a forced password change on first login), and license status.
 
-### 3.1 其他命令
+#### 3.1 Other Commands
 
 ```bash
-sudo ./goteamsctl status                 # 查看服务、版本与授权状态（输出 /api/system/license/status 的 JSON）
-sudo ./goteamsctl upgrade                # 下载升级包后进入执行升级，升级时服务会短暂中断，升级时保留数据
-sudo ./goteamsctl start                  # 按顺序启动：postgres/redis → goteams（含迁移）→ web
-sudo ./goteamsctl stop                   # 停止全部服务（数据卷保留）
+sudo ./goteamsctl status                 # Show container status, installed version, and license status (JSON from /api/system/license/status)
+sudo ./goteamsctl upgrade                # Then proceed with the upgrade after the package is downloaded; the service is briefly interrupted and data is preserved
+sudo ./goteamsctl start                  # Start in order: postgres/redis → goteams (with migrations) → web
+sudo ./goteamsctl stop                   # Stop all services (data volumes preserved)
 sudo ./goteamsctl restart                # stop + start
-sudo ./goteamsctl status                 # 容器状态 + 已安装版本 + 授权状态 JSON
-sudo ./goteamsctl version                # goteamsctl 自身版本（edition/commit）
-sudo ./goteamsctl reset-admin-password   # 按提示输入 y 确认，随后立即保存打印出的新密码
-sudo ./goteamsctl logs                   # 全部服务，实时跟踪，最近 200 行
-sudo ./goteamsctl logs goteams           # 仅后端应用日志
-sudo ./goteamsctl logs web               # 仅 nginx/前端
-sudo ./goteamsctl logs postgres          # 仅数据库
-sudo ./goteamsctl logs redis             # 仅缓存
-sudo ./goteamsctl uninstall              # 卸载（不可恢复）：会永久删除全部容器、网络、数据卷（postgres/redis 数据）、整个安装根目录
+sudo ./goteamsctl version                # goteamsctl's own version (edition/commit)
+sudo ./goteamsctl reset-admin-password   # Confirm with y when prompted, then immediately save the printed new password
+sudo ./goteamsctl logs                   # All services, follow mode, last 200 lines
+sudo ./goteamsctl logs goteams           # Backend application logs only
+sudo ./goteamsctl logs web               # nginx/frontend only
+sudo ./goteamsctl logs postgres          # Database only
+sudo ./goteamsctl logs redis             # Cache only
+sudo ./goteamsctl uninstall              # Uninstall (irreversible): permanently deletes all containers, networks, data volumes (postgres/redis data), and the entire installation root directory
 ```
 
-## 4. 数据备份与恢复
+### 4. Data Backup and Restore
 
-升级前工具会自动备份，也可手动备份：
+The tool backs up automatically before upgrades; you can also back up manually:
 
 ```bash
-# 手动备份（与升级内部使用的方式一致）
+# Manual backup (same approach used internally by upgrade)
 sudo docker compose --project-name goteams-commercial \
   --env-file /opt/goteams/config/.env \
   -f /opt/goteams/current/docker/docker-compose.yml \
   exec -T postgres pg_dump -U goteams goteams > /backup/manual_$(date +%Y%m%d).sql
 ```
 
-恢复数据库（目标库需为空或确认可覆盖后执行）：
+Restore the database (run only after the target database is confirmed empty or safe to overwrite):
 
 ```bash
 sudo docker compose --project-name goteams-commercial \
@@ -111,23 +175,53 @@ sudo docker compose --project-name goteams-commercial \
   exec -T postgres psql -U goteams goteams < /backup/manual_20260909.sql
 ```
 
-## 5. 常见问题
+### 5. FAQ
 
-| 现象 | 原因与处理 |
-|------|-----------|
-| `already looks installed; use upgrade instead` | 目标目录已存在 `state.json`，是升级场景，改用 `goteamsctl upgrade` |
-| `docker engine is not reachable` | Docker 已安装但守护进程未运行：`systemctl start docker`（安装器不会替你启动一个已有的 Docker，见 4.6 节） |
-| `docker compose v2 is required` | 主机有引擎但缺插件；`install` 会自动补齐，手动执行时可 `sudo ./goteamsctl install-docker` |
-| `the bundled Docker runtime is installed through systemd, but this host has no running systemd` | 主机 PID 1 不是 systemd（容器、部分极简/定制系统）；请自行准备 Docker 后再安装 |
-| `Docker needs iptables or nft on the host` | 静态引擎不含防火墙用户态工具：`yum install -y iptables` 或 `apt-get install -y iptables` 后重试 |
-| `a Docker installation was detected but is not usable` | 半安装状态（有 CLI 或有单元但引擎不可用），工具按 fail-closed 设计拒绝改动；按输出的命令排查既有 Docker，修好后重跑 |
-| `refusing to overwrite existing ...` | 目标位置已有同名二进制或单元；工具不覆盖系统文件，请确认这台机器的 Docker 归属后处理 |
-| `bundled docker runtime failed to start` | 引擎已装但起不来：`journalctl -u docker -u containerd --no-pager -n 80` 查原因 |
-| `insufficient disk space / memory` | 清理磁盘或扩容内存后重试（要求 ≥10GB / ≥2GB） |
-| `port 8080 is already in use` | 交互安装时换一个端口；`--yes` 模式需先释放默认端口 |
-| `WSL and other non-native Linux environments are not supported` | 主机未暴露 `/sys/class/dmi`，无法生成设备码；请更换为真实 Linux 服务器/虚拟机 |
-| 安装/升级报 `images: docker exited with code N` | 内网无法访问镜像仓库拉取镜像：改用**离线包**安装/升级，或放通到 registry 的网络 |
-| 升级报 `upgrade requires a version greater than ...` | 包版本不高于已安装版本；确认下载了更新的包 |
-| 升级报 `can only upgrade from vX.Y.Z or later` | 当前版本低于新包 `min_upgrade_version`。v0.0.23 及更早的包该值被写成「上一次打包占用的构建号」，等于只允许从紧邻版本升级：用修复后的打包脚本重新出包（默认下限 `v0.0.1`）即可直升；确有跨版本不兼容时再用 `-MinUpgradeVersion` 显式收紧 |
-| 授权失效后功能不可用 | 属 fail-closed 设计：仅登录、身份/权限、版本信息和 owner 续期接口可用，前端固定进入 `/members?tab=version` 页面完成续期 |
-| 设备码变化导致授权失效 | 迁移虚拟机/更换硬件会改变设备码；恢复原硬件配置或联系运营方重新签发授权 |
+| Symptom | Cause and Resolution |
+|---------|----------------------|
+| `already looks installed; use upgrade instead` | `state.json` already exists in the target directory — this is an upgrade scenario; use `goteamsctl upgrade` instead |
+| `docker engine is not reachable` | Docker is installed but the daemon is not running: `systemctl start docker` (the installer will not start an existing Docker daemon for you) |
+| `docker compose v2 is required` | The host has the engine but is missing the plugin; `install` fixes this automatically, or run `sudo ./goteamsctl install-docker` manually |
+| `the bundled Docker runtime is installed through systemd, but this host has no running systemd` | PID 1 on the host is not systemd (containers, some minimal/customized systems); prepare Docker yourself before installing |
+| `Docker needs iptables or nft on the host` | The static engine does not include firewall user-space tools: run `yum install -y iptables` or `apt-get install -y iptables`, then retry |
+| `a Docker installation was detected but is not usable` | Half-installed state (CLI or unit present but the engine is unusable); by fail-closed design, the tool refuses to make changes. Troubleshoot the existing Docker instance following the printed commands, then re-run |
+| `refusing to overwrite existing ...` | A binary or unit with the same name already exists at the target location; the tool does not overwrite system files — confirm who owns Docker on this machine first |
+| `bundled docker runtime failed to start` | The engine is installed but fails to start: check the cause with `journalctl -u docker -u containerd --no-pager -n 80` |
+| `insufficient disk space / memory` | Free up disk space or add memory, then retry (requires ≥10 GB / ≥2 GB) |
+| `port 8080 is already in use` | Choose a different port in interactive installation; in `--yes` mode, free the default port first |
+| `WSL and other non-native Linux environments are not supported` | The host does not expose `/sys/class/dmi`, so a device code cannot be generated; switch to a real Linux server/VM |
+| `images: docker exited with code N` during install/upgrade | The intranet cannot reach the image registry to pull images: use the **offline package**, or allow network access to the registry |
+| Upgrade reports `upgrade requires a version greater than ...` | The package version is not newer than the installed version; make sure you downloaded a newer package |
+| Upgrade reports `can only upgrade from vX.Y.Z or later` | The installed version is lower than the new package's `min_upgrade_version`. Packages v0.0.23 and earlier wrote "the build number of the previous packaging" into this field, allowing upgrades only from the immediately preceding version: rebuild with the fixed packaging script (default floor `v0.0.1`) to enable direct upgrades; if there really is a cross-version incompatibility, tighten it explicitly with `-MinUpgradeVersion` |
+| Features unavailable after license expiration | By fail-closed design: only login, identity/permission, version info, and owner renewal endpoints remain available; the frontend is fixed to the `/members?tab=version` page to complete renewal |
+| License invalidated after a device code change | Migrating the VM or changing hardware changes the device code; restore the original hardware configuration or contact the vendor to reissue the license |
+
+## 💻 Tech Stack
+
+---
+
+- **Backend**: Go + Gin
+
+- **Frontend**: Vue 3 + Ant Design Vue + Vite
+
+- **Database**: PostgreSQL 16 + Redis
+
+## 🏡 Community & Contact Us
+
+---
+
+Feel free to contact us for help or to provide suggestions to improve GoTeams. You can reach us through:
+
+- **Email**: Send an email to [jarvis@2bai.com.cn](mailto:jarvis@2bai.com.cn) to contact us.
+
+## 📖 Changelog
+
+---
+
+See [UpdateLog.md](./UpdateLog.md).
+
+## License
+
+---
+
+This project is licensed under the AGPL 3.0 License. See the [LICENSE](./LICENSE) file for the full license text.
